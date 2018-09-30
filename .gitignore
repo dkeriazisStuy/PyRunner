@@ -120,6 +120,9 @@ _*
 Thumbs.db
 ehthumbs.db
 
-# Filenames with special characters
+# Filenames with special characters #
 **/*[\\/\:;*?!'"<>|$º•¶§∞¢£]*
+
+# Temporary Files #
+tmp*
 
