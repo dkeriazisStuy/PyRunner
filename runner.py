@@ -12,7 +12,9 @@ def pull_image(image_name):
     try:
         client.images.get(image_name)
     except docker.errors.ImageNotFound:
-        print('Pulling {image_name}, this may take a while'.format(image_name=image_name))
+        print('Pulling {image_name}, this may take a while'.format(
+            image_name=image_name
+        ))
         name, tag = image_name.split(':')
         client.images.pull(name, tag=tag)
 
@@ -31,27 +33,45 @@ def make_dockerfile(temp_dir, py_file):
         f.write(dockerfile)
         return path
 
-def run_file(filename):
-    pull_image('python:3.7-alpine')
-    d = tempfile.mkdtemp(dir=os.path.abspath('.'))
-
+def build_image(d, filename, args, debug):
     dockerfile_path = make_dockerfile(d, filename)
     shutil.copy(filename, d)
-    image, stream = client.images.build(path=d, rm=True, dockerfile=dockerfile_path)
-    for s in stream:
-        if 'stream' in s:
-            print(s['stream'], end='')
+    image, stream = client.images.build(
+            path=d,
+            rm=True,
+            dockerfile=dockerfile_path
+        )
+    if debug:
+        for s in stream:
+            if 'stream' in s:
+                print(s['stream'], end='')
     os.remove(dockerfile_path)
+    return image
 
+def run_container(d, image):
     mount = docker.types.Mount(type='bind', source=d, target='/root')
-    container = client.containers.run(image=image.id, mounts=[mount], detach=True)
+    container = client.containers.run(
+            image=image.id,
+            mounts=[mount],
+            detach=True
+        )
+    return container
 
-    stream = container.logs(stream=True)
-    for s in stream:
-        print(s.decode('utf8'), end='')
+def get_stream(container):
+    return container.logs(stream=True)
 
+def teardown(container, image):
     container.remove()
     client.images.remove(image=image.id)
 
-run_file('baz.py')
+def run_file(filename, args=(), debug=False):
+    pull_image('python:3.7-alpine')
+    d = tempfile.mkdtemp(dir=os.path.abspath('.'))
+    image = build_image(d, filename, args, debug)
+    container = run_container(d, image)
+    for s in get_stream(container):
+        print(s.decode('utf8'), end='')
+    teardown(container, image)
+
+run_file('baz.py', debug=True)
 
