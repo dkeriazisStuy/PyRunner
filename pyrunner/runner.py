@@ -87,13 +87,17 @@ def start_container_stream(container, timeout):
         p.terminate()
         p.join()
 
-def run_file(filename, args=None, timeout=10, debug=False):
+def run_file(filename, args=None, data=None, timeout=10, debug=False):
     if args is None:
         args = []
+    if data is None:
+        data = []
     image = None
     container = None
     try:
         d = tempfile.mkdtemp(dir=os.path.abspath('.'))
+        for f in data:
+            shutil.copy(os.path.abspath(f), d)
         image = build_image(d, 'python:3.7-alpine', filename, args, debug)
         container = run_container(d, image)
         start_container_stream(container, timeout)
