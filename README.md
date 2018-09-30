@@ -4,6 +4,7 @@ Run python scripts safely by utilizing Docker
 
 ## To Do
 
+* Add documentation
 * Allow multiple versions
 * Allow other modules to be included
 
