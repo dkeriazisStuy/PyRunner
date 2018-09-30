@@ -1,17 +1,13 @@
-import tempfile
-import time
-import signal
-import docker
-import shutil
-import os
-import os.path
 import json
 import multiprocessing
+import os
+import os.path
+import shutil
+import tempfile
+import docker
 
+# Create docker client from environment
 client = docker.from_env()
-
-class TimeOutException(Exception):
-    pass
 
 def pull_image(image_name, debug):
     try:
@@ -85,9 +81,10 @@ def start_container_stream(container, timeout):
     # Process will call container_stream(container) when started
     p = multiprocessing.Process(target=lambda: container_stream(container))
     p.start()
-    # Wait until process times out or completes
+    # Wait until container times out or finished executing
     p.join(timeout)
-    if p.is_alive():  # If thread is still active
+    # If container is still running, terminate it
+    if p.is_alive():
         p.terminate()
         p.join()
 
