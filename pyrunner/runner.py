@@ -99,9 +99,5 @@ def run_file(filename, args=None, timeout=10, debug=False):
         start_container_stream(container, timeout)
     finally:
         teardown(image, container)
-
-if __name__ == "__main__":
-    #  run_file('_baz.py', args=['in_file.txt', 'out_file.txt'], debug=True)
-    #  run_file('_loop.py', debug=True)
-    run_file('_for.py', debug=True)
+    return d
 
