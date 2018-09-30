@@ -111,8 +111,6 @@ venv.bak/
 
 # MacOS Files #
 .DS_Store
-._*
-_*
 .Spotlight*
 .Trashes
 
