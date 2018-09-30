@@ -94,6 +94,7 @@ def run_file(filename, args=None, data=None, timeout=10, debug=False):
         data = []
     image = None
     container = None
+    d = None
     try:
         d = tempfile.mkdtemp(dir=os.path.abspath('.'))
         for f in data:
@@ -103,5 +104,5 @@ def run_file(filename, args=None, data=None, timeout=10, debug=False):
         start_container_stream(container, timeout)
     finally:
         teardown(image, container)
-    return d
+        return d
 

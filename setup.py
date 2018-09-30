@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='PyRunner',
-    version='0.1.1',
+    version='1.0.0',
     packages=['pyrunner', 'pyrunner.test'],
     url='https://github.com/dkeriazisStuy/PyRunner',
     license='',
