@@ -1,7 +1,12 @@
 from pyrunner import run_file
 
 print('Not timing out:')
-run_file('stream.py', debug=True)
+d = run_file('stream.py', debug=True)
+print('Run directory 1:')
+print(d)
+
 print('Timing out:')
-run_file('stream.py', timeout=5, debug=True)
+d_fail = run_file('stream.py', timeout=5, debug=True)
+print('Run directory 2:')
+print(d_fail)
 
