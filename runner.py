@@ -6,16 +6,21 @@ import shutil
 import os
 import os.path
 import json
+import multiprocessing
 
 client = docker.from_env()
 
-def pull_image(image_name):
+class TimeOutException(Exception):
+    pass
+
+def pull_image(image_name, debug):
     try:
         client.images.get(image_name)
     except docker.errors.ImageNotFound:
-        print('Pulling {image_name}, this may take a while'.format(
-            image_name=image_name
-        ))
+        if debug:
+            print('Pulling {image_name}, this may take a while'.format(
+                image_name=image_name
+            ))
         name, tag = image_name.split(':')
         client.images.pull(name, tag=tag)
 
@@ -64,23 +69,43 @@ def get_stream(container):
 
 def teardown(image, container):
     if container is not None:
+        try:
+            container.kill()
+        except docker.errors.APIError:
+            pass
         container.remove()
     if image is not None:
         client.images.remove(image=image.id)
 
-def run_file(filename, args=(), debug=False):
+def container_stream(container):
+    for s in get_stream(container):
+        print(s.decode('utf8'), end='')
+
+def run_file(filename, args=None, timeout=10, debug=False):
+    if args is None:
+        args = []
     image = None
     container = None
     try:
-        pull_image('python:3.7-alpine')
+        pull_image('python:3.7-alpine', debug)
         d = tempfile.mkdtemp(dir=os.path.abspath('.'))
         image = build_image(d, filename, args, debug)
         container = run_container(d, image)
-        for s in get_stream(container):
-            print(s.decode('utf8'), end='')
+
+        # Process will call container_stream(container) when started
+        p = multiprocessing.Process(target=lambda: container_stream(container))
+        p.start()
+
+        # Wait until process times out or completes
+        p.join(timeout)
+
+        if p.is_alive():  # If thread is still active
+            p.terminate()
+            p.join()
     finally:
         teardown(image, container)
 
 if __name__ == "__main__":
-    run_file('_baz.py', args=['in_file.txt', 'out_file.txt'], debug=True)
+    #  run_file('_baz.py', args=['in_file.txt', 'out_file.txt'], debug=True)
+    run_file('_loop.py', debug=True)
 
