@@ -81,6 +81,16 @@ def container_stream(container):
     for s in get_stream(container):
         print(s.decode('utf8'), end='')
 
+def start_container_stream(container, timeout):
+    # Process will call container_stream(container) when started
+    p = multiprocessing.Process(target=lambda: container_stream(container))
+    p.start()
+    # Wait until process times out or completes
+    p.join(timeout)
+    if p.is_alive():  # If thread is still active
+        p.terminate()
+        p.join()
+
 def run_file(filename, args=None, timeout=10, debug=False):
     if args is None:
         args = []
@@ -91,17 +101,7 @@ def run_file(filename, args=None, timeout=10, debug=False):
         d = tempfile.mkdtemp(dir=os.path.abspath('.'))
         image = build_image(d, filename, args, debug)
         container = run_container(d, image)
-
-        # Process will call container_stream(container) when started
-        p = multiprocessing.Process(target=lambda: container_stream(container))
-        p.start()
-
-        # Wait until process times out or completes
-        p.join(timeout)
-
-        if p.is_alive():  # If thread is still active
-            p.terminate()
-            p.join()
+        start_container_stream(container, timeout)
     finally:
         teardown(image, container)
 
