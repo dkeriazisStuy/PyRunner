@@ -2,6 +2,12 @@
 
 Run python scripts safely by utilizing Docker
 
+## To Do
+
+* Allow copying other files
+* Only allow certain functions to be accessible
+* Running a python file should return the path to the output directory
+
 ## Known Bugs
 
 * Container stream is not real-time
